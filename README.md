@@ -5,7 +5,7 @@
 * **is a real-time URL security scanner that helps users detect whether a website is safe or potentially harmful before visiting it**.
 
 🔗 **Live Demo:**
-https://cybershield-url.netlify.app
+https://mrinalray.github.io/Cybershield_URL/
 
 ---
 
