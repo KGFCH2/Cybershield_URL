@@ -69,9 +69,14 @@ https://cybershield-url.netlify.app
 This project uses:
 
 * Google Safe Browsing API
-
   * Detects malicious URLs
   * Requires API key from Google Cloud Console
+  * **To generate your API Key**:
+    1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+    2. Create or select a project.
+    3. Enable the **Safe Browsing API**.
+    4. Go to **APIs & Services > Credentials** and generate an API key.
+    5. Save the key in your local `.env` configuration file.
 
 ---
 
