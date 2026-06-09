@@ -1287,13 +1287,72 @@ input[type="text"].input-error {
   .team-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Scanner 2-column layout (main + history) ── */
+.scanner-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  /* Two columns: full-width main (left) + fixed history (right) */
+  .scanner-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+
+  /* Force deterministic placement */
+  .scanner-main {
+    grid-column: 1 !important;
+    justify-self: stretch;
+  }
+
+  aside.history-panel {
+    grid-column: 2 !important;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  /* Ensure result card fills the available left column width */
+  .scanner-main #result,
+  .scanner-main #riskAnalysis {
+    width: 100%;
+  }
+
+  .scanner-main #result .result-card {
+    width: 100%;
+  }
+}
+
+
+
+
 /* ── History Panel ── */
 .history-panel {
-  margin-top: 24px;
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: 16px;
   padding: 16px;
+  min-width: 0;
+
+  /* Keep buttons clickable and avoid being covered */
+  position: relative;
+  z-index: 10;
+}
+
+.history-list {
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .history-list {
+    max-height: 220px;
+  }
 }
 
 .history-header {
@@ -1314,12 +1373,6 @@ input[type="text"].input-error {
 .history-meta {
   font-size: 12px;
   color: var(--subtitle-color);
-}
-
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .history-item {
@@ -1349,6 +1402,12 @@ input[type="text"].input-error {
   flex: 1;
 }
 
+.history-item button:focus-visible {
+  outline: 2px solid rgba(var(--accent-1-rgb), 0.65);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 .history-url {
   font-family: 'Courier New', monospace;
   font-size: 12px;
@@ -1362,4 +1421,13 @@ input[type="text"].input-error {
   color: var(--subtitle-color);
   white-space: nowrap;
 }
+
+/* ── Ensure the long URL report spans wide (until Scan button width) ── */
+#result .result-url {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 

@@ -1,4 +1,4 @@
-// ─────────────────────────────
+  // ─────────────────────────────
 // LOADER
 // ─────────────────────────────
 
@@ -558,7 +558,30 @@ async function checkSecurity() {
           </div>
         </div>`, url, threats);
 
-      addToHistory(url, 'DANGER');
+      addToHistory(url, 'DANGER', {
+        title: 'Threat Detected!',
+        desc: `This URL is flagged as dangerous. Do not visit it.<br><br>
+        <div class="breakdown">
+          <div class="breakdown-item">
+            ${isHttps ? '✅' : '⚠️'} <b>HTTPS:</b> ${isHttps ? 'Secure connection' : 'Not secure'}
+          </div>
+          <div class="breakdown-item">
+            ${hasMalware ? '🔴' : '✅'} <b>Malware:</b> ${hasMalware ? 'Detected!' : 'No malware detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasPhishing ? '🔴' : '✅'} <b>Phishing:</b> ${hasPhishing ? 'Phishing detected!' : 'No phishing detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasUnwanted ? '🔴' : '✅'} <b>Unwanted Software:</b> ${hasUnwanted ? 'Detected!' : 'None detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasHarmful ? '🔴' : '✅'} <b>Harmful App:</b> ${hasHarmful ? 'Detected!' : 'None detected'}
+          </div>
+        </div>`,
+        threats: threats,
+        resultType: 'danger'
+      });
+
     } else {
       updateStats('safe');
       const urlObj = new URL(url);
@@ -589,7 +612,30 @@ async function checkSecurity() {
           </div>
         </div>`, url, []);
 
-      addToHistory(url, 'SAFE');
+      addToHistory(url, 'SAFE', {
+        title: 'URL is Safe',
+        desc: `No threats detected. Google Safe Browsing found no issues.<br><br>
+        <div class="breakdown">
+          <div class="breakdown-item">
+            ${isHttps ? '✅' : '⚠️'} <b>HTTPS:</b> ${isHttps ? 'Secure connection' : 'Not secure — use with caution'}
+          </div>
+          <div class="breakdown-item">
+            ${hasMalware ? '🔴' : '✅'} <b>Malware:</b> ${hasMalware ? 'Detected!' : 'No malware detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasPhishing ? '🔴' : '✅'} <b>Phishing:</b> ${hasPhishing ? 'Phishing detected!' : 'No phishing detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasUnwanted ? '🔴' : '✅'} <b>Unwanted Software:</b> ${hasUnwanted ? 'Detected!' : 'None detected'}
+          </div>
+          <div class="breakdown-item">
+            ${hasHarmful ? '🔴' : '✅'} <b>Harmful App:</b> ${hasHarmful ? 'Detected!' : 'None detected'}
+          </div>
+        </div>`,
+        threats: [],
+        resultType: 'safe'
+      });
+
     }
 
 
@@ -599,7 +645,13 @@ async function checkSecurity() {
        <small style="color:#334155">Error: ${err.message}</small>`,
       '', []);
     // Store attempted URL only if it passed initial validation
-    addToHistory(input, 'ERROR');
+      addToHistory(input, 'ERROR', {
+      title: 'Scan Error',
+      desc: `An unexpected error occurred.<br><small style="color:#334155">Error: ${err.message}</small>`,
+      threats: [],
+      resultType: 'error'
+    });
+
   } finally {
 
     btn.disabled = false;
@@ -732,27 +784,44 @@ function renderHistory() {
     const status = item.status || 'UNKNOWN';
     return `
       <div class="history-item" role="listitem">
-        <button type="button" onclick="fillExample(${JSON.stringify(item.url)})" aria-label="Fill input with saved URL">
+        <button type="button" onclick="loadHistoryReport(${JSON.stringify(item.url)})" aria-label="Load saved report">
           <div class="history-url">${item.url}</div>
           <div class="history-url" style="margin-top:4px; font-size:11px; color: var(--subtitle-color); text-transform: uppercase; letter-spacing: .06em;">${status}</div>
         </button>
+
         <div class="history-at">${at}</div>
       </div>
     `;
   }).join('');
 }
 
-function addToHistory(url, status) {
+function addToHistory(url, status, reportPayload = null) {
   if (!url) return;
 
   const normalized = normalizeUrlForHistory(url);
+
   if (!normalized) return;
 
   const history = loadHistory();
 
-  // De-dup by normalized URL (do not delete others)
+  // De-dup by normalized URL
   const existingIndex = history.findIndex(h => normalizeUrlForHistory(h.url) === normalized);
-  const entry = { url: url.trim(), normalized, at: Date.now(), status: (status || '').toUpperCase() };
+
+  // Merge existing payload with the newly provided one (if any)
+  const existing = existingIndex >= 0 ? history[existingIndex] : null;
+  const entry = {
+    url: url.trim(),
+    normalized,
+    at: Date.now(),
+    status: (status || '').toUpperCase(),
+    // Merge existing payload with the newly provided one (if any)
+    title: reportPayload?.title ?? existing?.title ?? null,
+    desc: reportPayload?.desc ?? existing?.desc ?? null,
+    threats: reportPayload?.threats ?? existing?.threats ?? null,
+    resultType:
+      reportPayload?.resultType ?? existing?.resultType ?? (status || '').toLowerCase()
+  };
+
 
   if (existingIndex >= 0) {
     history[existingIndex] = entry;
@@ -764,9 +833,88 @@ function addToHistory(url, status) {
   renderHistory();
 }
 
+function loadHistoryReport(urlString) {
+  const history = loadHistory();
+  if (!history.length) return;
+
+  const normalized = normalizeUrlForHistory(urlString);
+  const found = history.find(h => normalizeUrlForHistory(h.url) === normalized);
+  if (!found) return;
+
+  // Close/hide any previous loading animations quickly
+  const riskEl = document.getElementById('riskAnalysis');
+  if (riskEl) riskEl.classList.remove('hidden');
+
+  // Make the result update feel instant
+  const resultEl = document.getElementById('result');
+  // 'instant' isn't reliably supported everywhere; use auto for consistent UX.
+  if (resultEl) resultEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+
+
+
+
+  // If we have stored a full report payload, restore it.
+  // Otherwise, at minimum fill input + show a friendly message.
+  if (found.title && found.desc != null) {
+    document.getElementById('urlInput').value = found.url;
+
+    // Restore result view without altering history list.
+    showResult(
+      found.resultType === 'danger' ? 'danger' : 'safe',
+      found.title,
+      found.desc,
+      found.url,
+      found.threats || []
+    );
+
+    // Ensure risk section becomes visible for safe/danger
+    document.getElementById('riskAnalysis')?.classList.remove('hidden');
+    return;
+  }
+
+  // Backward compatibility fallback
+  fillExample(found.url);
+  showResult(
+    'safe',
+    'Report loaded',
+    `Saved scan metadata found, but full details weren\'t available in this history entry.<br><br>Please rescan to regenerate full report details for this URL.`,
+    found.url,
+    []
+  );
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
   renderHistory();
+
+  // Real-time-ish update for history timestamps (every 5s)
+  const startTsUpdater = () => {
+    const listEl = document.getElementById('historyList');
+    if (!listEl) return;
+
+    const tick = () => {
+      const history = loadHistory();
+      if (!history.length) return;
+
+      const view = [...history].sort((a, b) => (b.at || 0) - (a.at || 0));
+      const items = listEl.querySelectorAll('.history-item');
+
+      items.forEach((el, idx) => {
+        const item = view[idx];
+        if (!item) return;
+        const at = item.at ? new Date(item.at).toLocaleString() : '';
+        const atEl = el.querySelector('.history-at');
+        if (atEl) atEl.textContent = at;
+      });
+    };
+
+    tick();
+    window.setInterval(tick, 5000);
+  };
+
+  startTsUpdater();
 });
+
 
 // ─────────────────────────────
 // THEME TOGGLE

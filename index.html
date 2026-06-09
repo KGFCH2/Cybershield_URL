@@ -104,6 +104,7 @@
         <!-- Example URLs -->
         <div class="examples" role="group" aria-label="Quick example URLs">
 
+
           <span class="examples-label" id="examplesLabel">
             Try:
           </span>
@@ -128,51 +129,57 @@
 
         </div>
 
-        <!-- Result -->
-        <div id="result" aria-live="polite" aria-atomic="true" role="status"></div>
+        <!-- Scanner layout: main results + history (desktop right, mobile stacked) -->
+        <div class="scanner-layout" id="scannerBody">
 
-        <!-- History Panel -->
-        <section class="history-panel" aria-label="Recently scanned URLs">
-          <div class="history-header">
-            <h3>History</h3>
-            <div class="history-meta" id="historyMeta">No scans yet</div>
-          </div>
-          <div class="history-list" id="historyList" role="list"></div>
-        </section>
+          <div class="scanner-main" id="scannerMain">
 
+            <!-- Result -->
+            <div id="result" aria-live="polite" aria-atomic="true" role="status"></div>
 
-        <!-- =========================
+            <!-- =========================
      Risk Analysis Section
 ========================== -->
+            <div id="riskAnalysis" class="risk-analysis hidden">
+              <h3>Threat Risk Analysis</h3>
 
-        <div id="riskAnalysis" class="risk-analysis hidden">
+              <!-- Risk Score -->
+              <div class="risk-score-text" id="riskScoreText">
+                Risk Score: 0%
+              </div>
 
-          <h3>Threat Risk Analysis</h3>
+              <!-- Risk Meter -->
+              <div class="meter-bar">
+                <div id="riskFill" class="meter-fill"></div>
+              </div>
 
-          <!-- Risk Score -->
-          <div class="risk-score-text" id="riskScoreText">
-            Risk Score: 0%
+              <!-- Confidence -->
+              <div class="confidence-text" id="confidenceText">
+                Confidence Level: 0%
+              </div>
+
+              <!-- Confidence Meter -->
+              <div class="meter-bar">
+                <div id="confidenceFill" class="meter-fill safe"></div>
+              </div>
+
+              <!-- Risk Label -->
+              <div class="risk-label" id="riskLabel">
+                SAFE
+              </div>
+
+            </div>
+
           </div>
 
-          <!-- Risk Meter -->
-          <div class="meter-bar">
-            <div id="riskFill" class="meter-fill"></div>
-          </div>
-
-          <!-- Confidence -->
-          <div class="confidence-text" id="confidenceText">
-            Confidence Level: 0%
-          </div>
-
-          <!-- Confidence Meter -->
-          <div class="meter-bar">
-            <div id="confidenceFill" class="meter-fill safe"></div>
-          </div>
-
-          <!-- Risk Label -->
-          <div class="risk-label" id="riskLabel">
-            SAFE
-          </div>
+          <!-- History Panel -->
+          <aside class="history-panel" aria-label="Recently scanned URLs">
+            <div class="history-header">
+              <h3>History</h3>
+              <div class="history-meta" id="historyMeta">No scans yet</div>
+            </div>
+            <div class="history-list" id="historyList" role="list"></div>
+          </aside>
 
         </div>
 
@@ -181,6 +188,7 @@
 
       <!-- Stats -->
       <div class="stats-row">
+
 
         <div class="stat-card">
           <div class="stat-num" id="totalScans">0</div>
