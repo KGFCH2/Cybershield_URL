@@ -95,6 +95,143 @@ function toggleTeam() {
 }
 
 // ─────────────────────────────
+// IMAGE UPLOAD & OCR
+// ─────────────────────────────
+
+let ocrWorker = null;
+
+async function initOCR() {
+  if (ocrWorker) return ocrWorker;
+  try {
+    ocrWorker = await Tesseract.createWorker('eng', 1, {
+      logger: m => console.log('[OCR]', m)
+    });
+    return ocrWorker;
+  } catch (err) {
+    console.error('Failed to initialize OCR:', err);
+    return null;
+  }
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('uploadBox').classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('uploadBox').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('uploadBox').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    processImageFile(file);
+  }
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    processImageFile(file);
+  }
+  e.target.value = '';
+}
+
+async function processImageFile(file) {
+  const uploadBox = document.getElementById('uploadBox');
+  const progressBar = document.getElementById('uploadProgressBar');
+  const progressText = document.getElementById('uploadProgressText');
+
+  if (file.size > 5 * 1024 * 1024) {
+    showResult('error', 'File Too Large', 'Please upload an image smaller than 5MB.', '', []);
+    return;
+  }
+
+  uploadBox.classList.add('processing');
+
+  try {
+    progressText.textContent = 'Initializing OCR...';
+    const worker = await initOCR();
+    if (!worker) {
+      throw new Error('Failed to initialize OCR engine');
+    }
+
+    progressText.textContent = 'Processing image...';
+    const { data: { text } } = await worker.recognize(file);
+
+    progressText.textContent = 'Extracting URLs...';
+    const urls = extractUrlsFromText(text);
+
+    if (urls.length === 0) {
+      showResult('error', 'No URLs Found', 'Could not detect any URLs in the uploaded image. Please try a clearer screenshot.', '', []);
+      return;
+    }
+
+    if (urls.length === 1) {
+      document.getElementById('urlInput').value = urls[0];
+      checkSecurity();
+    } else {
+      showMultipleUrlsFound(urls);
+    }
+
+  } catch (err) {
+    console.error('OCR Error:', err);
+    showResult('error', 'Processing Failed', `Failed to process image: ${err.message}`, '', []);
+  } finally {
+    uploadBox.classList.remove('processing');
+  }
+}
+
+function extractUrlsFromText(text) {
+  const urlRegex = /(?:https?:\/\/)?(?:www\.)?[\w-]+(?:\.[\w-]+)+(?:\/[\w\-./?%&=]*)?/gi;
+  const matches = text.match(urlRegex) || [];
+
+  const urls = matches
+    .map(url => {
+      url = url.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      try {
+        new URL(url);
+        return url;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  return [...new Set(urls)];
+}
+
+function showMultipleUrlsFound(urls) {
+  const chipsHtml = urls.map((url, i) =>
+    `<button class="example-chip" onclick="selectExtractedUrl('${url.replace(/'/g, "\\'")}')" tabindex="0">${url}</button>`
+  ).join('');
+
+  document.getElementById('result').innerHTML = `
+    <div class="result-card safe">
+      <div class="result-icon"><span>✓</span></div>
+      <div class="result-body">
+        <div class="result-title">Multiple URLs Detected</div>
+        <div class="result-desc">Found ${urls.length} URLs in the image. Click one to scan:</div>
+        <div class="examples" style="margin-top: 16px; justify-content: flex-start;">${chipsHtml}</div>
+      </div>
+    </div>`;
+}
+
+function selectExtractedUrl(url) {
+  document.getElementById('urlInput').value = url;
+  checkSecurity();
+}
+
+// ─────────────────────────────
 // SCANNER
 // ─────────────────────────────
 

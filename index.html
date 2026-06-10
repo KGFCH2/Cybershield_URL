@@ -131,6 +131,27 @@
 
         </div>
 
+        <!-- Image Upload Section -->
+        <div class="upload-section" id="uploadSection">
+          <div class="upload-box" id="uploadBox" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('imageInput').click()" role="button" tabindex="0" aria-label="Upload screenshot or image containing URL">
+            <input type="file" id="imageInput" accept="image/*" hidden onchange="handleFileSelect(event)">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <div class="upload-text">
+              <span class="upload-title">Drag &amp; Drop Screenshot</span>
+              <span class="upload-subtitle">or click to browse</span>
+            </div>
+            <div class="upload-hint">Supports PNG, JPG, WebP • Max 5MB</div>
+            <div class="upload-progress hidden" id="uploadProgress">
+              <div class="upload-progress-bar" id="uploadProgressBar"></div>
+              <span class="upload-progress-text" id="uploadProgressText">Processing image...</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Result -->
         <div id="result" aria-live="polite" aria-atomic="true" role="status"></div>
 
@@ -305,6 +326,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="script.js"></script>
 
 </body>
