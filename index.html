@@ -104,6 +104,7 @@
         <!-- Example URLs -->
         <div class="examples" role="group" aria-label="Quick example URLs">
 
+
           <span class="examples-label" id="examplesLabel">
             Try:
           </span>
@@ -133,95 +134,11 @@
 
         <!-- =========================
      Risk Analysis Section
-========================== -->
 
-        <div id="riskAnalysis" class="risk-analysis hidden">
+          <div class="scanner-main" id="scannerMain">
 
-          <h3>Threat Risk Analysis</h3>
-
-          <!-- Risk Score -->
-          <div class="risk-score-text" id="riskScoreText">
-            Risk Score: 0%
-          </div>
-
-          <!-- Risk Meter -->
-          <div class="meter-bar">
-            <div id="riskFill" class="meter-fill"></div>
-          </div>
-
-          <!-- Confidence -->
-          <div class="confidence-text" id="confidenceText">
-            Confidence Level: 0%
-          </div>
-
-          <!-- Confidence Meter -->
-          <div class="meter-bar">
-            <div id="confidenceFill" class="meter-fill safe"></div>
-          </div>
-
-          <!-- Risk Label -->
-          <div class="risk-label" id="riskLabel">
-            SAFE
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- Stats -->
-      <div class="stats-row">
-
-        <div class="stat-card">
-          <div class="stat-num" id="totalScans">0</div>
-          <div class="stat-label">URLs Scanned</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-num" id="safeCount">0</div>
-          <div class="stat-label">Safe</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-num" id="dangerCount">0</div>
-          <div class="stat-label">Threats Blocked</div>
-        </div>
-
-      </div>
-
-      <!-- Features -->
-      <div class="features">
-
-        <div class="feature-item">
-          <div class="feature-icon">🛡️</div>
-          <div class="feature-title">Malware Detection</div>
-          <div class="feature-desc">
-            Identifies URLs hosting malicious software
-          </div>
-        </div>
-
-        <div class="feature-item">
-          <div class="feature-icon">🎣</div>
-          <div class="feature-title">Phishing Shield</div>
-          <div class="feature-desc">
-            Catches social engineering & credential theft
-          </div>
-        </div>
-
-        <div class="feature-item">
-          <div class="feature-icon">⚡</div>
-          <div class="feature-title">Real-time API</div>
-          <div class="feature-desc">
-            Live data from Google Safe Browsing database
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Team Section -->
-      <div class="team-section">
-
-        <div class="team-header">
+            <!-- Result -->
+            <div id="result" aria-live="polite" aria-atomic="true" role="status"></div>
 
           <div class="section-tag">The Team</div>
 

@@ -1,15 +1,20 @@
-// ─────────────────────────────
+  // ─────────────────────────────
 // LOADER
 // ─────────────────────────────
 
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-  setTimeout(() => {
+  const loader = document.getElementById('loader');
+  const main = document.getElementById('mainPage');
 
-    const loader = document.getElementById('loader');
-    const main = document.getElementById('mainPage');
+  if (sessionStorage.getItem('introShown')) {
+    loader.style.display = 'none';
+    main.classList.remove('hidden');
+  } else {
+    window.addEventListener('load', () => {
+      setTimeout(() => {
 
-    loader.classList.add('fade-out');
+        loader.classList.add('fade-out');
 
     setTimeout(() => {
       loader.style.display = 'none';
@@ -21,8 +26,25 @@ window.addEventListener('load', () => {
 
     }, 500);
 
-  }, 3200);
+        }, 500);
 
+      }, 3200);
+    });
+  }
+
+});
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && sessionStorage.getItem('introShown')) {
+    const loader = document.getElementById('loader');
+    const main = document.getElementById('mainPage');
+    if (loader) loader.style.display = 'none';
+    if (main) {
+      main.classList.remove('hidden');
+      main.style.animation = 'none';
+      main.style.opacity = '1';
+    }
+  }
 });
 
 // ─────────────────────────────
@@ -40,6 +62,7 @@ const team = [
 (function buildTeam() {
 
   const grid = document.getElementById('teamGrid');
+  if (!grid) return;
 
   grid.innerHTML = team.map(m => {
 
@@ -101,6 +124,168 @@ function toggleTeam() {
     toggle.setAttribute('aria-label', 'Show team members');
     toggle.setAttribute('aria-expanded', 'false');
   }
+}
+
+// ─────────────────────────────
+// SECURITY TIPS
+// ─────────────────────────────
+
+const TIPS = {
+
+  MALWARE: [
+    'Never download files or software from untrusted or unfamiliar websites.',
+    'Keep your antivirus software updated and run regular scans.',
+    'Avoid clicking links in unsolicited emails or messages — they may silently install malware.',
+    'Use a reputable ad blocker; malicious ads can trigger drive-by downloads.',
+    'Keep your OS and browser updated — patches close exploits malware relies on.',
+  ],
+
+  SOCIAL_ENGINEERING: [
+    'Legitimate websites never ask for your password via email or a popup.',
+    'Always check the full URL carefully — phishing sites mimic real ones with subtle typos.',
+    'Look for HTTPS and a valid padlock before entering any personal information.',
+    'When in doubt, go directly to the official website instead of clicking a link.',
+    'Enable two-factor authentication (2FA) so stolen passwords alone cannot access your accounts.',
+  ],
+
+  UNWANTED_SOFTWARE: [
+    'Only install software from official sources like verified app stores or developer sites.',
+    'Read permissions carefully before installing browser extensions or apps.',
+    'Regularly audit installed programs and remove anything you do not recognise.',
+    'Avoid "free" software bundles — they often include unwanted programs bundled silently.',
+    'Use a browser with built-in protection against unwanted software downloads.',
+  ],
+
+  POTENTIALLY_HARMFUL_APPLICATION: [
+    'Avoid sideloading apps from outside official stores unless you fully trust the source.',
+    'Check app reviews and publisher details before granting installation permissions.',
+    'Revoke unnecessary permissions for apps that request access to sensitive data.',
+    'Keep your device OS updated to protect against known app vulnerabilities.',
+    'Use a mobile security app to scan for potentially harmful applications.',
+  ],
+
+  general: [
+    'Use a password manager to generate and store strong, unique passwords.',
+    'Enable two-factor authentication on every account that supports it.',
+    'Regularly back up important data to an offline or encrypted cloud location.',
+    'Avoid using public Wi-Fi for banking or sensitive logins without a VPN.',
+    'Review your privacy settings on social media — oversharing aids social engineering.',
+    'Check "Have I Been Pwned" (haveibeenpwned.com) to see if your email was leaked.',
+    'Be sceptical of urgency — scammers manufacture time pressure to bypass your judgement.',
+    'Lock your devices with a strong PIN or biometric — physical access is a real threat.',
+    'Use a DNS-level blocker like 1.1.1.1 with filtering to block malicious domains.',
+    'Think before you click. Pause, inspect the URL, then decide.',
+  ],
+
+};
+
+// Tracks last shown general tip index to avoid repeats
+let lastGeneralTipIndex = -1;
+
+function getRandomTip(arr, lastIndex = -1) {
+  let index;
+  do {
+    index = Math.floor(Math.random() * arr.length);
+  } while (arr.length > 1 && index === lastIndex);
+  lastGeneralTipIndex = index;
+  return { tip: arr[index], index };
+}
+
+function buildTipsHtml(threatTypes) {
+
+  const isThreat = threatTypes && threatTypes.length > 0;
+
+  if (isThreat) {
+
+    // Collect unique tip sets for each detected threat type
+    const sections = [];
+
+    const threatLabels = {
+      MALWARE: { label: 'Malware', icon: '🦠' },
+      SOCIAL_ENGINEERING: { label: 'Phishing / Social Engineering', icon: '🎣' },
+      UNWANTED_SOFTWARE: { label: 'Unwanted Software', icon: '📦' },
+      POTENTIALLY_HARMFUL_APPLICATION: { label: 'Harmful Application', icon: '⚠️' },
+    };
+
+    threatTypes.forEach(threat => {
+      const tipPool = TIPS[threat];
+      if (!tipPool) return;
+
+      const meta = threatLabels[threat] || { label: threat, icon: '⚠️' };
+
+      // Pick 3 random non-repeating tips from the pool
+      const shuffled = [...tipPool].sort(() => Math.random() - 0.5).slice(0, 3);
+
+      sections.push(`
+        <div class="tips-threat-section">
+          <div class="tips-threat-label">
+            <span aria-hidden="true">${meta.icon}</span> ${meta.label} Tips
+          </div>
+          <ul class="tips-list" role="list">
+            ${shuffled.map(t => `<li role="listitem">${t}</li>`).join('')}
+          </ul>
+        </div>
+      `);
+    });
+
+    return `
+      <div class="tips-card danger-tips" role="region" aria-label="Safety tips for detected threats">
+        <div class="tips-header">
+          <span class="tips-header-icon" aria-hidden="true">🛡️</span>
+          <span class="tips-header-title">Stay Safe — What To Do Next</span>
+        </div>
+        <div class="tips-body">
+          ${sections.join('')}
+          <p class="tips-footer-note">Do <strong>not</strong> visit this URL. Report it to your IT team or via <a href="https://safebrowsing.google.com/safebrowsing/report_phish/" target="_blank" rel="noopener noreferrer">Google Safe Browsing Report</a>.</p>
+        </div>
+      </div>
+    `;
+
+  } else {
+
+    // Safe URL — show a random rotating general tip
+    const { tip } = getRandomTip(TIPS.general, lastGeneralTipIndex);
+
+    return `
+      <div class="tips-card safe-tips" role="region" aria-label="Cybersecurity awareness tip">
+        <div class="tips-header">
+          <span class="tips-header-icon" aria-hidden="true">💡</span>
+          <span class="tips-header-title">Cybersecurity Tip of the Scan</span>
+        </div>
+        <div class="tips-body">
+          <p class="tips-general-tip">${tip}</p>
+          <button type="button" class="tips-refresh-btn" onclick="refreshGeneralTip()" aria-label="Show another cybersecurity tip">
+            🔄 Show another tip
+          </button>
+        </div>
+      </div>
+    `;
+
+  }
+}
+
+function refreshGeneralTip() {
+  const { tip } = getRandomTip(TIPS.general, lastGeneralTipIndex);
+  const tipEl = document.querySelector('.tips-general-tip');
+  if (tipEl) {
+    tipEl.style.opacity = '0';
+    setTimeout(() => {
+      tipEl.textContent = tip;
+      tipEl.style.opacity = '1';
+    }, 200);
+  }
+}
+
+function showTips(threatTypes) {
+  const resultEl = document.getElementById('result');
+  if (!resultEl) return;
+
+  // Remove any existing tips card
+  const existing = resultEl.querySelector('.tips-card');
+  if (existing) existing.remove();
+
+  const tipsHtml = buildTipsHtml(threatTypes);
+  resultEl.insertAdjacentHTML('beforeend', tipsHtml);
 }
 
 // ─────────────────────────────
@@ -274,7 +459,7 @@ function calculateRiskScore(url, isThreat) {
       score += 10;
       breakdown.push({ text: 'Excessive subdomains used', type: 'warning' });
     } else {
-       breakdown.push({ text: 'Domain structure appears normal', type: 'safe' });
+      breakdown.push({ text: 'Domain structure appears normal', type: 'safe' });
     }
   } catch (e) {
     score += 20;
@@ -364,13 +549,12 @@ function showResult(type, title, desc, url, threats) {
 
       <div class="result-icon" aria-hidden="true">
 
-        ${
-          type === 'loading'
-            ? '<div class="spinner"></div>'
-            : type === 'scan-loading'
-            ? ''
-            : `<span>${icons[type]}</span>`
-        }
+        ${type === 'loading'
+      ? '<div class="spinner"></div>'
+      : type === 'scan-loading'
+        ? ''
+        : `<span>${icons[type]}</span>`
+    }
 
       </div>
 
@@ -471,6 +655,11 @@ async function checkSecurity() {
 
   const url = validation.url;
 
+  const typoCard = document.getElementById('typosquattingCard');
+  if (typoCard) {
+    typoCard.classList.add('hidden');
+  }
+
   const btn =
     document.getElementById('scanBtn');
 
@@ -529,7 +718,7 @@ async function checkSecurity() {
 
   try {
     const apiHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://localhost:3000'
+      ? 'http://localhost:3002'
       : 'https://cybershield-sxz0.onrender.com';
     const response = await fetch(`${apiHost}/check`, {
       method: 'POST',
@@ -579,7 +768,11 @@ async function checkSecurity() {
             <span class="sr-only">${hasHarmful ? 'Detected' : 'Clear'}:</span>
             <b>Harmful App:</b> ${hasHarmful ? 'Detected!' : 'None detected'}
           </div>
-        </div>`, url, threats);
+        </div>`,
+        threats: threats,
+        resultType: 'danger'
+      });
+
     } else {
       updateStats('safe');
       const urlObj = new URL(url);
@@ -618,15 +811,29 @@ async function checkSecurity() {
             <span class="sr-only">${hasHarmful ? 'Detected' : 'Clear'}:</span>
             <b>Harmful App:</b> ${hasHarmful ? 'Detected!' : 'None detected'}
           </div>
-        </div>`, url, []);
+        </div>`,
+        threats: [],
+        resultType: 'safe'
+      });
+
     }
+
 
   } catch (err) {
     showResult('error', 'Scan Error',
       `An unexpected error occurred.<br>
        <small style="color:#334155">Error: ${err.message}</small>`,
       '', []);
+    // Store attempted URL only if it passed initial validation
+      addToHistory(input, 'ERROR', {
+      title: 'Scan Error',
+      desc: `An unexpected error occurred.<br><small style="color:#334155">Error: ${err.message}</small>`,
+      threats: [],
+      resultType: 'error'
+    });
+
   } finally {
+
     btn.disabled = false;
     btn.removeAttribute('aria-busy');
     btn.setAttribute('aria-label', 'Scan the entered URL for security threats');
@@ -695,8 +902,208 @@ async function downloadPDF() {
 }
 
 // ─────────────────────────────
+// HISTORY PANEL (localStorage)
+// ─────────────────────────────
+
+const HISTORY_KEY = 'cybershield_scan_history_v1';
+
+function safeParseJson(value, fallback) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeUrlForHistory(urlString) {
+  try {
+    const input = (urlString || '').trim();
+    if (!input) return '';
+    const withProto =
+      input.startsWith('http://') || input.startsWith('https://')
+        ? input
+        : 'https://' + input;
+    const u = new URL(withProto);
+    // Remove trailing slash to reduce duplicates
+    const path = (u.pathname && u.pathname !== '/') ? u.pathname : '';
+    const query = u.search ? u.search : '';
+    const hash = '';
+    return `${u.protocol}//${u.hostname}${path}${query}${hash}`;
+  } catch {
+    // If normalization fails, use raw trimmed input
+    return (urlString || '').trim();
+  }
+}
+
+function loadHistory() {
+  const raw = localStorage.getItem(HISTORY_KEY);
+  const arr = safeParseJson(raw, []);
+  if (!Array.isArray(arr)) return [];
+  return arr;
+}
+
+function saveHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function renderHistory() {
+  const listEl = document.getElementById('historyList');
+  const metaEl = document.getElementById('historyMeta');
+  if (!listEl) return;
+
+  const history = loadHistory();
+
+  if (!history.length) {
+    if (metaEl) metaEl.textContent = 'No scans yet';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  if (metaEl) metaEl.textContent = `${history.length} saved scan${history.length === 1 ? '' : 's'}`;
+
+  // newest first
+  const view = [...history].sort((a, b) => (b.at || 0) - (a.at || 0));
+  listEl.innerHTML = view.map(item => {
+    const at = item.at ? new Date(item.at).toLocaleString() : '';
+    const status = item.status || 'UNKNOWN';
+    return `
+      <div class="history-item" role="listitem">
+        <button type="button" onclick="loadHistoryReport(${JSON.stringify(item.url)})" aria-label="Load saved report">
+          <div class="history-url">${item.url}</div>
+          <div class="history-url" style="margin-top:4px; font-size:11px; color: var(--subtitle-color); text-transform: uppercase; letter-spacing: .06em;">${status}</div>
+        </button>
+
+        <div class="history-at">${at}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function addToHistory(url, status, reportPayload = null) {
+  if (!url) return;
+
+  const normalized = normalizeUrlForHistory(url);
+
+  if (!normalized) return;
+
+  const history = loadHistory();
+
+  // De-dup by normalized URL
+  const existingIndex = history.findIndex(h => normalizeUrlForHistory(h.url) === normalized);
+
+  // Merge existing payload with the newly provided one (if any)
+  const existing = existingIndex >= 0 ? history[existingIndex] : null;
+  const entry = {
+    url: url.trim(),
+    normalized,
+    at: Date.now(),
+    status: (status || '').toUpperCase(),
+    // Merge existing payload with the newly provided one (if any)
+    title: reportPayload?.title ?? existing?.title ?? null,
+    desc: reportPayload?.desc ?? existing?.desc ?? null,
+    threats: reportPayload?.threats ?? existing?.threats ?? null,
+    resultType:
+      reportPayload?.resultType ?? existing?.resultType ?? (status || '').toLowerCase()
+  };
+
+
+  if (existingIndex >= 0) {
+    history[existingIndex] = entry;
+  } else {
+    history.push(entry);
+  }
+
+  saveHistory(history);
+  renderHistory();
+}
+
+function loadHistoryReport(urlString) {
+  const history = loadHistory();
+  if (!history.length) return;
+
+  const normalized = normalizeUrlForHistory(urlString);
+  const found = history.find(h => normalizeUrlForHistory(h.url) === normalized);
+  if (!found) return;
+
+  // Close/hide any previous loading animations quickly
+  const riskEl = document.getElementById('riskAnalysis');
+  if (riskEl) riskEl.classList.remove('hidden');
+
+  // Make the result update feel instant
+  const resultEl = document.getElementById('result');
+  // 'instant' isn't reliably supported everywhere; use auto for consistent UX.
+  if (resultEl) resultEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+
+
+
+
+  // If we have stored a full report payload, restore it.
+  // Otherwise, at minimum fill input + show a friendly message.
+  if (found.title && found.desc != null) {
+    document.getElementById('urlInput').value = found.url;
+
+    // Restore result view without altering history list.
+    showResult(
+      found.resultType === 'danger' ? 'danger' : 'safe',
+      found.title,
+      found.desc,
+      found.url,
+      found.threats || []
+    );
+
+    // Ensure risk section becomes visible for safe/danger
+    document.getElementById('riskAnalysis')?.classList.remove('hidden');
+    return;
+  }
+
+  // Backward compatibility fallback
+  fillExample(found.url);
+  showResult(
+    'safe',
+    'Report loaded',
+    `Saved scan metadata found, but full details weren\'t available in this history entry.<br><br>Please rescan to regenerate full report details for this URL.`,
+    found.url,
+    []
+  );
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderHistory();
+
+  // Real-time-ish update for history timestamps (every 5s)
+  const startTsUpdater = () => {
+    const listEl = document.getElementById('historyList');
+    if (!listEl) return;
+
+    const tick = () => {
+      const history = loadHistory();
+      if (!history.length) return;
+
+      const view = [...history].sort((a, b) => (b.at || 0) - (a.at || 0));
+      const items = listEl.querySelectorAll('.history-item');
+
+      items.forEach((el, idx) => {
+        const item = view[idx];
+        if (!item) return;
+        const at = item.at ? new Date(item.at).toLocaleString() : '';
+        const atEl = el.querySelector('.history-at');
+        if (atEl) atEl.textContent = at;
+      });
+    };
+
+    tick();
+    window.setInterval(tick, 5000);
+  };
+
+  startTsUpdater();
+});
+
+
+// ─────────────────────────────
 // THEME TOGGLE
 // ─────────────────────────────
+
 
 (function initTheme() {
 
