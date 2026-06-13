@@ -107,8 +107,12 @@ app.post('/check', async (req, res) => {
   }
 });
 
+
+
 // ─── Scam Text Detection (AI) ───
 app.post('/api/scam-detect', async (req, res) => {
+  console.log('[SCAM-DETECT] Request received:', req.body.message?.slice(0, 50));  // ← add this
+  
   const { message, history } = req.body;
   if (!message) return res.status(400).json({ error: 'No message provided' });
 
@@ -144,22 +148,23 @@ app.post('/api/scam-detect', async (req, res) => {
 
   try {
     const response = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: conversationMessages,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 512 }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 1024 }
         })
       }
     );
 
     if (!response.ok) {
-      const errText = await response.text();
-      return res.status(502).json({ error: 'Gemini API error', detail: errText });
-    }
+  const errText = await response.text();
+  console.error('[GEMINI ERROR]', response.status, errText);  // ← add this line
+  return res.status(502).json({ error: 'Gemini API error', detail: errText });
+}
 
     const data     = await response.json();
     const rawText  = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';

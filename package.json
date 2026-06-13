@@ -1,11 +1,10 @@
 {
   "name": "url-detector",
   "version": "1.0.0",
-  "description": "Real-time threat detection scanner powered by Google Safe Browsing API.",
-  "main": "server.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "node --test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +14,6 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.4.1",
-    "node-fetch": "^2.7.0",
-    "puppeteer": "^25.1.0"
+    "node-fetch": "^2.7.0"
   }
 }
